@@ -1,0 +1,16 @@
+
+[
+  {"employee_name": "Mansi Patel", "month": "January", "items_sold": 120, "revenue": 18000.00, "salary": 7000.00},
+  {"employee_name": "Mansi Patel", "month": "February", "items_sold": 135, "revenue": 20250.00, "salary": 7000.00},
+  {"employee_name": "Mansi Patel", "month": "March", "items_sold": 150, "revenue": 22500.00, "salary": 7000.00},
+
+  {"employee_name": "Shreya Mehta", "month": "January", "items_sold": 95, "revenue": 14250.00, "salary": 6500.00},
+  {"employee_name": "Shreya Mehta", "month": "February", "items_sold": 100, "revenue": 15000.00, "salary": 6500.00},
+  {"employee_name": "Shreya Mehta", "month": "March", "items_sold": 110, "revenue": 16500.00, "salary": 6500.00},
+
+  {"employee_name": "Seema Reddy", "month": "January", "items_sold": 80, "revenue": 12000.00, "salary": 6300.00},
+  {"employee_name": "Seema Reddy", "month": "February", "items_sold": 90, "revenue": 13500.00, "salary": 6300.00},
+  {"employee_name": "Seema Reddy", "month": "March", "items_sold": 92, "revenue": 13800.00, "salary": 6300.00}
+]
+
+

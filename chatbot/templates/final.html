@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chatbot SQL Explorer</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #121212; color: #eee; padding: 20px; }
+    input[type=text] { width: 100%; padding: 10px; font-size: 16px; }
+    button { padding: 10px 20px; margin-top: 10px; font-size: 16px; cursor: pointer; }
+    .box { background: #1e1e1e; padding: 20px; border-radius: 8px; margin-top: 20px; }
+    pre { background: #2d2d2d; padding: 10px; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word; }
+  </style>
+</head>
+<body>
+  <h1>🧠 Chatbot SQL Explorer</h1>
+  <form method="post">
+    <label>Enter your prompt:</label><br>
+    <input type="text" name="prompt" required placeholder="e.g., Show me crawl_properties with ID 1901">
+    <button type="submit">Submit</button>
+  </form>
+
+  {% if sql_query %}
+  <div class="box">
+    <h3>🧾 Generated SQL:</h3>
+    <pre>{{ sql_query }}</pre>
+  </div>
+  {% endif %}
+
+  {% if result %}
+  <div class="box">
+    <h3>📊 Query Result:</h3>
+    <pre>{{ result | tojson(indent=2) }}</pre>
+  </div>
+  {% endif %}
+
+  {% if explanation %}
+  <div class="box">
+    <h3>📣 Human-Friendly Explanation:</h3>
+    <pre>{{ explanation }}</pre>
+  </div>
+  {% endif %}
+</body>
+</html>

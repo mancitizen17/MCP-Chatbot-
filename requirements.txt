@@ -5,3 +5,4 @@ llama-index>=0.10.0
 gunicorn>=21.2.0
 pandas>=2.0.0
 mcp>=2.0.0
+

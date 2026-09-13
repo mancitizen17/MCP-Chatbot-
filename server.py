@@ -118,14 +118,12 @@ def user_prompt():
         print("❗Invalid choice. Skipping manual input.")
 
 if __name__ == "__main__":
-    # Prompt user first
-    user_prompt()
+    import os
+    if os.environ.get("RUN_CLI_DEMO") == "1":
+        user_prompt()
 
-    print("🚀Starting FastMCP server...")
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--server_type", type=str, default="sse", choices=["sse", "stdio"]
-    )
-    args = parser.parse_args()
-    mcp.run(args.server_type)
+    print("🚀 Starting FastMCP server...")
+    port = int(os.environ.get("PORT", 8000))
+    mcp.settings.host = "0.0.0.0"
+    mcp.settings.port = port
+    mcp.run("sse")

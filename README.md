@@ -3,6 +3,7 @@
 An AI-powered chatbot built with Groq LLM, Flask, and LlamaIndex.  
 It supports **tool calling** and interacts with a custom database using MCP.
 
+🔗 **Live demo:** https://mcp-chatbot-rxtp.onrender.com
 ---
 
 ## 🚀 Features

@@ -1,4 +1,5 @@
 import os
+import json
 import sqlite3
 from flask import Flask, request, jsonify, render_template_string
 from groq import Groq
@@ -28,14 +29,77 @@ def init_db():
 
 
 def read_data(query="SELECT * FROM people"):
+    """Run a read-only SELECT against demo.db and return real rows."""
+    if not query.strip().lower().startswith("select"):
+        return {"error": "Only SELECT queries are allowed for read_data."}
     conn, cursor = init_db()
     try:
         cursor.execute(query)
-        return cursor.fetchall()
+        columns = [d[0] for d in cursor.description] if cursor.description else []
+        rows = cursor.fetchall()
+        return {"columns": columns, "rows": rows}
     except sqlite3.Error as e:
-        return [f"Error: {e}"]
+        return {"error": str(e)}
     finally:
         conn.close()
+
+
+def add_data(query: str):
+    """Run an INSERT against demo.db."""
+    if not query.strip().lower().startswith("insert"):
+        return {"error": "Only INSERT statements are allowed for add_data."}
+    conn, cursor = init_db()
+    try:
+        cursor.execute(query)
+        conn.commit()
+        return {"success": True, "rows_inserted": cursor.rowcount}
+    except sqlite3.Error as e:
+        return {"error": str(e)}
+    finally:
+        conn.close()
+
+
+# Tool definitions the model can choose to call, in Groq/OpenAI function-calling format.
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "read_data",
+            "description": (
+                "Run a SELECT SQL query against the 'people' table "
+                "(columns: id, name, age, profession) and return the real matching rows."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "A SQL SELECT statement, e.g. 'SELECT * FROM people WHERE age > 30'.",
+                    }
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_data",
+            "description": "Run an INSERT SQL statement to add a new row to the 'people' table.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "A SQL INSERT statement targeting the 'people' table.",
+                    }
+                },
+                "required": ["query"],
+            },
+        },
+    },
+]
+
+AVAILABLE_TOOLS = {"read_data": read_data, "add_data": add_data}
 
 
 HTML_PAGE = """
@@ -276,30 +340,62 @@ def home():
     return render_template_string(HTML_PAGE)
 
 
-@app.route("/chat", methods=["POST"])
-def chat():
-    user_message = request.json.get("message", "")
-
-    try:
-        completion = client.chat.completions.create(
-            model="openai/gpt-oss-120b",
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                         "You are Supernova, a helpful assistant for a small demo database. "
+SYSTEM_PROMPT = {
+    "role": "system",
+    "content": (
+                    "You are Supernova, a helpful assistant for a small demo database. "
                         "The database has a 'people' table with columns: id, name, age, profession. "
                         "You were built for this MCP-Chatbot project by mansi. "
                         "If the user asks your name, who made you, or what model/AI you are, "
                         "respond only that you are Supernova, an assistant built for this project by mansi. "
                         "Never mention ChatGPT, GPT, OpenAI, Groq, Ollama or any underlying model/provider name, "
                         "even if asked directly or indirectly."
-                    ),
-                },
-                {"role": "user", "content": user_message},
-            ],
+    ),
+}
+
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    user_message = request.json.get("message", "")
+    messages = [SYSTEM_PROMPT, {"role": "user", "content": user_message}]
+
+    try:
+        completion = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=messages,
+            tools=TOOLS,
+            tool_choice="auto",
         )
-        reply = completion.choices[0].message.content
+        response_message = completion.choices[0].message
+
+        if response_message.tool_calls:
+            messages.append(response_message)
+
+            for tool_call in response_message.tool_calls:
+                fn_name = tool_call.function.name
+                try:
+                    fn_args = json.loads(tool_call.function.arguments or "{}")
+                except json.JSONDecodeError:
+                    fn_args = {}
+
+                fn = AVAILABLE_TOOLS.get(fn_name)
+                result = fn(**fn_args) if fn else {"error": f"Unknown tool: {fn_name}"}
+
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "name": fn_name,
+                    "content": json.dumps(result, default=str),
+                })
+
+            followup = client.chat.completions.create(
+                model="openai/gpt-oss-120b",
+                messages=messages,
+            )
+            reply = followup.choices[0].message.content
+        else:
+            reply = response_message.content
+
     except Exception as e:
         reply = f"Sorry, something went wrong: {e}"
 

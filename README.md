@@ -4,8 +4,8 @@ An AI-powered chatbot built with Groq LLM, Flask, and LlamaIndex.
 It supports **tool calling** and interacts with a custom database using MCP.
 
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://mcp-chatbot-rxtp.onrender.com)
-> 🤖 Try asking Supernova "who built you?" — it'll introduce you to its creator ;p
-Note: hosted on Render's free tier — the first load after inactivity may take up to a minute to wake up.
+> 🤖 Try asking Supernova "who created you?" — it'll introduce you to its creator ;p
+> Note: hosted on Render's free tier — the first load after inactivity may take up to a minute to wake up.
 ---
 
 ## 🚀 Features

@@ -42,37 +42,208 @@ HTML_PAGE = """
 <!DOCTYPE html>
 <html>
 <head>
-<title>MCP Chatbot</title>
+<title>MCP Console</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  body { font-family: -apple-system, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 16px; background:#0f172a; color:#e2e8f0;}
-  h2 { text-align:center; }
-  #chat { border:1px solid #334155; border-radius:10px; height:420px; overflow-y:auto; padding:14px; background:#1e293b;}
-  .msg { margin:8px 0; padding:9px 13px; border-radius:10px; max-width:80%; line-height:1.4; }
-  .user { background:#2563eb; margin-left:auto; text-align:right; }
-  .bot { background:#334155; }
-  #inputRow { display:flex; margin-top:12px; gap:8px; }
-  #userInput { flex:1; padding:11px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff; font-size:15px; }
-  button { padding:11px 18px; border:none; border-radius:8px; background:#2563eb; color:#fff; cursor:pointer; font-size:15px; }
-  button:hover { background:#1d4ed8; }
+  :root {
+    --ink: #12151c;
+    --panel: #1a1e28;
+    --panel-line: #2a2f3d;
+    --amber: #e8a33d;
+    --teal: #4fb8a8;
+    --text: #e7e9ee;
+    --text-dim: #8b91a1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--ink);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(79,184,168,0.06), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(232,163,61,0.05), transparent 40%);
+    color: var(--text);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  #app {
+    width: 100%;
+    max-width: 640px;
+  }
+  #statusbar {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0 4px 14px;
+  }
+  #dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--teal);
+    box-shadow: 0 0 0 0 rgba(79,184,168,0.6);
+    animation: pulse 2.2s infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(79,184,168,0.55); }
+    70%  { box-shadow: 0 0 0 7px rgba(79,184,168,0); }
+    100% { box-shadow: 0 0 0 0 rgba(79,184,168,0); }
+  }
+  #title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+  #subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-left: auto;
+  }
+  #panel {
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  #chat {
+    height: 440px;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  #chat::-webkit-scrollbar { width: 8px; }
+  #chat::-webkit-scrollbar-thumb { background: var(--panel-line); border-radius: 8px; }
+  .row { display: flex; }
+  .row.user { justify-content: flex-end; }
+  .bubble {
+    max-width: 78%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 14.5px;
+    line-height: 1.5;
+  }
+  .row.user .bubble {
+    background: var(--amber);
+    color: #23180a;
+    border-bottom-right-radius: 3px;
+  }
+  .row.bot .bubble {
+    background: #20242f;
+    border: 1px solid var(--panel-line);
+    border-left: 2px solid var(--teal);
+    border-bottom-left-radius: 3px;
+    color: var(--text);
+  }
+  .typing .bubble {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 13px 14px;
+  }
+  .typing span {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    animation: blink 1.3s infinite ease-in-out;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.25; transform: scale(0.85); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+  #inputbar {
+    display: flex;
+    gap: 8px;
+    padding: 14px;
+    border-top: 1px solid var(--panel-line);
+    background: #171b24;
+  }
+  #userInput {
+    flex: 1;
+    padding: 11px 13px;
+    border-radius: 9px;
+    border: 1px solid var(--panel-line);
+    background: var(--ink);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    outline: none;
+  }
+  #userInput:focus { border-color: var(--teal); }
+  #userInput::placeholder { color: var(--text-dim); }
+  #send {
+    padding: 0 18px;
+    border: none;
+    border-radius: 9px;
+    background: var(--amber);
+    color: #23180a;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+  }
+  #send:hover { filter: brightness(1.08); }
+  #send:disabled { opacity: 0.5; cursor: default; }
+  #hint {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 10px 0 0;
+  }
 </style>
 </head>
 <body>
-<h2>MCP Chatbot</h2>
-<div id="chat"></div>
-<div id="inputRow">
-  <input id="userInput" placeholder="Ask me something..." autofocus />
-  <button onclick="sendMessage()">Send</button>
+<div id="app">
+  <div id="statusbar">
+    <div id="dot"></div>
+    <div id="title">MCP Console</div>
+    <div id="subtitle">demo.db · groq</div>
+  </div>
+  <div id="panel">
+    <div id="chat"></div>
+    <div id="inputbar">
+      <input id="userInput" placeholder="Ask something..." autofocus />
+      <button id="send" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+  <div id="hint">first response may take a moment if the server was asleep</div>
 </div>
 <script>
+function addBubble(role, html) {
+  const chat = document.getElementById('chat');
+  const row = document.createElement('div');
+  row.className = 'row ' + role;
+  row.innerHTML = `<div class="bubble">${html}</div>`;
+  chat.appendChild(row);
+  chat.scrollTop = chat.scrollHeight;
+  return row;
+}
+
 async function sendMessage() {
   const input = document.getElementById('userInput');
-  const chat = document.getElementById('chat');
+  const button = document.getElementById('send');
   const text = input.value.trim();
   if (!text) return;
-  chat.innerHTML += `<div class="msg user">${text}</div>`;
+
+  addBubble('user', text);
   input.value = '';
-  chat.scrollTop = chat.scrollHeight;
+  button.disabled = true;
+
+  const typingRow = addBubble('bot', '');
+  typingRow.classList.add('typing');
+  typingRow.querySelector('.bubble').innerHTML = '<span></span><span></span><span></span>';
 
   try {
     const res = await fetch('/chat', {
@@ -81,12 +252,16 @@ async function sendMessage() {
       body: JSON.stringify({message: text})
     });
     const data = await res.json();
-    chat.innerHTML += `<div class="msg bot">${data.reply}</div>`;
+    typingRow.remove();
+    addBubble('bot', data.reply);
   } catch (err) {
-    chat.innerHTML += `<div class="msg bot">Error reaching server.</div>`;
+    typingRow.remove();
+    addBubble('bot', 'Error reaching server.');
   }
-  chat.scrollTop = chat.scrollHeight;
+  button.disabled = false;
+  input.focus();
 }
+
 document.getElementById('userInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') sendMessage();
 });

@@ -5,6 +5,7 @@ It supports **tool calling** and interacts with a custom database using MCP.
 
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://mcp-chatbot-rxtp.onrender.com)
 
+Note: hosted on Render's free tier — the first load after inactivity may take up to a minute to wake up.
 ---
 
 ## 🚀 Features
